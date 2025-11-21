@@ -29,7 +29,8 @@ public class Program
         File.WriteAllText(outputFile, string.Empty);
 
         var builder = Host.CreateApplicationBuilder(args);
-        builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+        var appsettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+        builder.Configuration.AddJsonFile(appsettingsPath, optional: false, reloadOnChange: true);
 
         builder.Services.Configure<SimulationOptions>(builder.Configuration.GetSection("Simulation"));
         builder.Services.AddSingleton<IMetricsCollector>(_ =>
