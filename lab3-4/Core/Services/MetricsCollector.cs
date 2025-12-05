@@ -56,6 +56,15 @@ public sealed class MetricsCollector : IMetricsCollector
         }
     }
 
+    public void SetState(string philosopherName, PhilosopherRuntimeState state)
+    {
+        var summary = _metrics.GetOrAdd(philosopherName, name => new PhilosopherSummary { Name = name });
+        lock (summary)
+        {
+            summary.CurrentState = state;
+        }
+    }
+
     public SimulationReport BuildReport(
         IReadOnlyList<ForkStatus> forkStatuses,
         IReadOnlyList<ForkUtilization>? forkUtilization = null,

@@ -9,6 +9,7 @@ public interface IMetricsCollector
     void RecordEating(string philosopherName, int milliseconds);
     void RecordWaiting(string philosopherName, long milliseconds);
     void RecordFailedAttempt(string philosopherName);
+    void SetState(string philosopherName, PhilosopherRuntimeState state);
     SimulationReport BuildReport(
         IReadOnlyList<ForkStatus> forkStatuses,
         IReadOnlyList<ForkUtilization>? forkUtilization = null,

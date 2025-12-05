@@ -18,4 +18,12 @@ public sealed class PhilosopherSummary
     public long TotalWaitingMs { get; set; }
     public int EatingCount { get; set; }
     public int FailedAttempts { get; set; }
+    public PhilosopherRuntimeState CurrentState { get; set; } = PhilosopherRuntimeState.Thinking;
+}
+
+public enum PhilosopherRuntimeState
+{
+    Thinking,
+    Hungry,
+    Eating
 }

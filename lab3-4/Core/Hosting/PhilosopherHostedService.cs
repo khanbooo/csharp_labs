@@ -2,6 +2,7 @@ using System.Diagnostics;
 using DiningPhilosophers.Core.Interfaces;
 using DiningPhilosophers.Core.Options;
 using DiningPhilosophers.Core.Services;
+using DiningPhilosophers.Core.Utility;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -42,6 +43,7 @@ public sealed class PhilosopherHostedService : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            _metrics.SetState(_seat.Name, PhilosopherRuntimeState.Thinking);
             int thinkTime = _random.Next(settings.ThinkingTimeMin, settings.ThinkingTimeMax + 1);
             _logger.LogDebug("{Philosopher} thinking for {Duration} ms", _seat.Name, thinkTime);
             await Task.Delay(thinkTime, stoppingToken);
@@ -49,6 +51,7 @@ public sealed class PhilosopherHostedService : BackgroundService
 
             bool acquired = false;
             var waitStart = Stopwatch.GetTimestamp();
+            _metrics.SetState(_seat.Name, PhilosopherRuntimeState.Hungry);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -73,12 +76,14 @@ public sealed class PhilosopherHostedService : BackgroundService
 
             if (!acquired)
             {
+                _metrics.SetState(_seat.Name, PhilosopherRuntimeState.Thinking);
                 break;
             }
 
             try
             {
                 _tableManager.MarkEating(_seat.Name, _seat.LeftForkIndex, _seat.RightForkIndex);
+                _metrics.SetState(_seat.Name, PhilosopherRuntimeState.Eating);
                 int eatTime = _random.Next(settings.EatingTimeMin, settings.EatingTimeMax + 1);
                 _logger.LogDebug("{Philosopher} eating for {Duration} ms", _seat.Name, eatTime);
                 await Task.Delay(eatTime, stoppingToken);
@@ -87,6 +92,7 @@ public sealed class PhilosopherHostedService : BackgroundService
             finally
             {
                 _tableManager.ReleaseForks(_seat.Name, _seat.LeftForkIndex, _seat.RightForkIndex);
+                _metrics.SetState(_seat.Name, PhilosopherRuntimeState.Thinking);
             }
         }
 

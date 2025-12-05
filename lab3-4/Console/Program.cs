@@ -1,5 +1,6 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using DiningPhilosophers.Core.Hosting;
 using DiningPhilosophers.Core.Interfaces;
 using DiningPhilosophers.Core.Options;
@@ -42,15 +43,21 @@ public class Program
             }
             return collector;
         });
-        builder.Services.AddSingleton<IPhilosopherStrategy, LeftRightStrategy>();
+        builder.Services.AddSingleton<IPhilosopherStrategy>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<SimulationOptions>>().Value;
+            return StrategySelector.Create(options.Strategy);
+        });
         builder.Services.AddSingleton<ITableManager>(_ => new TableManager(philosopherNames.Count));
         builder.Services.AddSingleton(new SimulationOutput(outputFile));
         builder.Services.AddHostedService<SimulationSupervisor>();
         builder.Services.AddHostedService<StatusReporter>();
 
+        var seats = new List<PhilosopherSeat>();
         for (int i = 0; i < philosopherNames.Count; i++)
         {
             var seat = new PhilosopherSeat(philosopherNames[i], i, philosopherNames.Count);
+            seats.Add(seat);
             builder.Services.AddSingleton<IHostedService>(sp => new PhilosopherHostedService(
                 seat,
                 sp.GetRequiredService<IPhilosopherStrategy>(),
@@ -59,6 +66,7 @@ public class Program
                 sp.GetRequiredService<IOptions<SimulationOptions>>(),
                 sp.GetRequiredService<ILogger<PhilosopherHostedService>>()));
         }
+        builder.Services.AddSingleton<IReadOnlyList<PhilosopherSeat>>(seats);
 
         using var host = builder.Build();
         await host.RunAsync();

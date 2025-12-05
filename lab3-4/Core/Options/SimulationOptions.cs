@@ -9,4 +9,5 @@ public sealed class SimulationOptions
     public int EatingTimeMax { get; set; } = 60;
     public int ForkAcquisitionTime { get; set; } = 20;
     public int DisplayUpdateInterval { get; set; } = 250;
+    public string Strategy { get; set; } = "LeftRight";
 }
